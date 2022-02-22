@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sampleBoard">
+
+	<!-- 게시글 전체 조회 -->
+	<select id="getBoardList" parameterType="BoardDTO" resultType="BoardDTO">
+		SELECT BOARD_SEQ
+			, BOARD_RE_REF
+			, BOARD_RE_LEV
+			, BOARD_RE_SEQ
+			, BOARD_WRITER
+			, BOARD_SUBJECT
+			, BOARD_CONTENT
+			, BOARD_HITS
+			, DEL_YN
+			, INS_USER_ID
+			, CAST( DATE_FORMAT( INS_DATE, '%Y-%m-%d %H:%i:%s') AS CHAR(19) ) AS INS_DATE
+			, UPD_USER_ID
+			, CAST( DATE_FORMAT( UPD_DATE, '%Y-%m-%d %H:%i:%s') AS CHAR(19) ) AS UPD_DATE
+		FROM BOARD.TB_BOARD
+		WHERE DEL_YN = 'N'
+		ORDER BY BOARD_SEQ DESC
+	</select>
+	
+	<!-- 게시글 등록 -->
+	<insert id="insertBoard" parameterType="BoardDTO">
+		INSERT
+			INTO BOARD.TB_BOARD
+				(
+					BOARD_RE_REF
+					, BOARD_RE_LEV
+					, BOARD_RE_SEQ
+					, BOARD_WRITER
+					, BOARD_SUBJECT
+					, BOARD_CONTENT
+					, INS_USER_ID
+					, INS_DATE
+					, UPD_USER_ID
+					, UPD_DATE
+				)
+			VALUES
+				(
+					0
+					, 0
+					, 0
+					, #{boardWriter}
+					, #{boardSubject}
+					, #{boardContent}
+					, 'NONMEMBER'
+					, NOW()
+					, 'NONMEMBER'
+					, NOW()
+				)
+	</insert>
+	
+	<!-- 게시글 제목 클릭 시 조회수 1씩 증가 -->
+	<update id="updateHitCnt" parameterType="BoardDTO">
+		<![CDATA[
+			UPDATE BOARD.TB_BOARD
+			SET
+				BOARD_HITS = IFNULL(BOARD_HITS, 0) + 1
+				, UPD_USER_ID = 'NONMEMBER'
+				, UPD_DATE = NOW()
+			WHERE
+				BOARD_SEQ = #{boardSeq}
+		]]>
+	</update>
+	
+	<!-- 게시글 상페 페이지 -->
+	<select id="selectBoardDetail" parameterType="BoardDTO" resultType="hashMap">
+		<![CDATA[
+			SELECT BOARD_SEQ
+				, BOARD_RE_REF
+				, BOARD_RE_LEV
+				, BOARD_RE_SEQ
+				, BOARD_WRITER
+				, BOARD_SUBJECT
+				, BOARD_CONTENT
+				, BOARD_HITS
+				, DEL_YN
+				, INS_USER_ID
+				, CAST( DATE_FORMAT( INS_DATE, '%Y-%m-%d %H:%i:%s' ) AS CHAR(19) ) AS INS_DATE
+				, UPD_USER_ID
+				, CAST( DATE_FORMAT( UPD_DATE, '%Y-%m-%d %H:%i:%s' ) AS CHAR(19) ) AS UPD_DATE
+			FROM BOARD.TB_BOARD
+			WHERE BOARD_SEQ = #{boardSeq}
+		]]>
+	</select>
+	
+	<update id="updateBoard" parameterType="BoardDTO">
+		<![CDATA[
+			UPDATE BOARD.TB_BOARD
+			SET BOARD_SUBJECT = #{boardSubject}
+				, BOARD_CONTENT = #{boardContent}
+				, UPD_USER_ID = 'NONMEMBER'
+				, UPD_DATE = NOW()
+			WHERE BOARD_SEQ = #{boardSeq}
+		]]>
+	</update>
+	
+	<update id="deleteBoard" parameterType="BoardDTO">
+		<![CDATA[
+			UPDATE BOARD.TB_BOARD
+			SET DEL_YN = 'Y'
+			WHERE BOARD_SEQ = #{boardSeq}
+		]]>
+	</update>
+</mapper>
